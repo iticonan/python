@@ -1,59 +1,34 @@
-# Python script to create keyboard shortcuts to move mouse pointer on sway.
-# How to use: edit grid, mods(modifier keys), and res (resolution) to your settings and run script
-# Copy/Paste output to sway configuration file
+# this creates keyboard shortcuts for absolute mouse positioning on sway.
+# basic use: edit res (resolution) to match your monitor and run
 
-grid = [ # A rectangular character map. No gaps. No repeats.
-    '1234567890',
-    'qwertyuiop',
-    'asdfghjkl;',
-    'zxcvbnm,./',
+# best I could find for wayland (correspond to F13-F18). Must be same length
+xmain = ['XF86Tools','XF86Launch5','XF86Launch6']
+ymain = ['XF86Launch7','XF86Launch8','XF86Launch9']
+
+grid = [ # Filler chars. just ensure same length arrays and no repeats
+    '12345',
+    'qwert',
+    'asdfg',
+    'zxcvb',
 ]
-#      [(x-axis-mods),(y-axis mods)]
-# mods = [("Mod1+",),("Mod4+","Control+")]
-mods = [[],("Mod5+","Control+")]
-res = (1920, 1080);
-solo = True
+res = (1080, 720); #note: scale depending. e.g. 2 scaling halves resolution
 
-lenxm = len(mods[0])
-lenym = len(mods[1])
-stepx = res[0]/len(grid[0])/ ( (1 if lenxm == 0 else lenxm+1) if solo else pow(2,lenxm))
-stepy = res[1]/len(grid)/    ( (1 if lenym == 0 else lenym+1) if solo else pow(2,lenym))
-# print("lenxm:%d\tlenym:%d\tstepx:%d\tstepy:%d" % (lenxm, lenym, stepx, stepy))
-
-def parse( ch ):
-    if ch == ';': return 'semicolon'
-    if ch == ',': return 'comma'
-    if ch == '.': return 'period'
-    if ch == '/': return 'slash'
-    if ch == "'": return 'apostrophe'
-    if ch == '[': return 'bracketleft'
-    if ch == "]": return 'bracketright'
-    if ch == "-": return 'minus'
-    if ch == "=": return 'equal'
-    if ch == "\\": return 'backslash'
-    return ch
-
-def modifs( i, m ):
-    if solo:
-        return "" if len(m) == 0 or len(m) == i else m[i]
-    bools = format(i, "0%db" % len(m) )
-    ans = ""
-    for i in range(0, len(m)):
-        if bools[i] == '1': 
-            ans += m[i]
-    return ans
+zoneW = res[0]/len(xmain)
+zoneH = res[1]/len(ymain)
+stepx = zoneW/len(grid[0])
+stepy = zoneH/len(grid)
 
 def xpos( x, offset):
-    return stepx/2 + stepx*x + offset*res[0]/ (lenxm+1 if solo else pow(2, lenxm) )
+    return x*zoneW + offset*stepx + stepx/2
 
 def ypos( y, offset):
-    return stepy/2 + stepy*y + offset*res[1]/ (lenym+1 if solo else pow(2, lenym) )
+    return y*zoneH + offset*stepy + stepy/2
 
-template = 'bindsym SunProps+%s%s%s \t\t  seat "-" cursor set %d %d'
-for mx in range(0, lenxm + 1 if solo else lenxm*2 ):
-    for my in range(0,lenym + 1 if solo else lenym*2):
+template = 'bindsym %s+%s+%s \t\t  seat "-" cursor set %d %d'
+for my in range(0, len(ymain) ):
+    for mx in range(0, len(xmain)):
         for y in range(0, len(grid)):
             for x in range(0,len(grid[0])):
                 # print ("mx:%d\tmy:%d\ty:%d\tx:%d " %(mx,my,y,x))
-                print (template % (modifs(my, mods[1]), modifs(mx, mods[0]), 
-                                   parse(grid[y][x]), xpos(x, mx), ypos(y, my)))
+                print (template % ( ymain[my], xmain[mx], grid[y][x], 
+                                   xpos(mx,x ), ypos(my,y) ))
